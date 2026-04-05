@@ -1,3 +1,6 @@
 langgraph
 langchain-openai
 python-dotenv
+python-telegram-bot
+PyGithub
+langgraph-checkpoint-sqlite
