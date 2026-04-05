@@ -15,30 +15,26 @@ from langchain_openai import ChatOpenAI
 
 load_dotenv()
 
-# --- DR. GRETCHEN HAWLEY EXERCISE LIBRARY ---
+# --- ENHANCED DR. GRETCHEN HAWLEY EXERCISE LIBRARY ---
 MS_EXERCISE_DB = {
-    "foot_drop": [
-        "Seated Ankle Pumps (Neuro-rehab style)",
-        "Standing Wall-Supported Dorsiflexion",
-        "Resistance Band 4-Way Ankle Strengthening"
-    ],
-    "marching": [
-        "Seated High Marches (Functional Hip Flexion)",
-        "Standing Marches with Countertop Support",
-        "Slow-Motion Walking (Focus on Heel Strike)"
-    ],
-    "sit_to_stand": [
-        "Powered-Up Sit-to-Stands (Focus on Glute Drive)",
-        "Eccentric Loading (5-second sit-down)",
-        "Staggered Stance Sit-to-Stands"
-    ],
+    "foot_drop": {
+        "Level 1": ["Seated Ankle Pumps", "Resistance Band 4-Way Ankle Strengthening"],
+        "Level 2": ["Standing Heel-to-Toe Walks", "Single-Leg Balance with Ankle Circles"]
+    },
+    "marching": {
+        "Level 1": ["Seated High Marches", "Standing Marches with Support"],
+        "Level 2": ["High Marches with 2-second Hold (Core Engagement)", "Weighted Marches (using small water bottles)"]
+    },
+    "sit_to_stand": {
+        "Level 1": ["Powered-Up Sit-to-Stands", "5-second Eccentric Sit-down"],
+        "Level 2": ["Staggered Stance Sit-to-Stands", "Hover Squats (stop 1 inch before touching the chair)"]
+    },
     "fatigue_recovery": [
-        "Diaphragmatic Breathing",
-        "Supine Nerve Glides",
+        "Diaphragmatic Breathing", 
+        "Nerve Glides", 
         "Gentle Trunk Rotations"
     ]
 }
-
 # --- 1. STATE DEFINITION ---
 class AgentState(TypedDict):
     fatigue_level: int
@@ -49,16 +45,30 @@ class AgentState(TypedDict):
 # --- 2. GITHUB LOGGING LOGIC ---
 def log_to_github(content: str):
     try:
-        # Create an Auth object first
+        # 1. Setup Auth
+        from github import Auth
         auth = Auth.Token(os.getenv("GITHUB_TOKEN"))
-        
-        # Pass the auth object to the Github class
         g = Github(auth=auth)
         
         repo = g.get_repo(os.getenv("GITHUB_REPO"))
         file_path = "progress_log.md"
         
-        # ... (rest of your existing logic)
+        # 2. Nested Try for the file itself
+        try:
+            file_exists = repo.get_contents(file_path)
+            new_content = file_exists.decoded_content.decode() + f"\n{content}"
+            repo.update_file(file_path, f"Update log: {datetime.now().date()}", new_content, file_exists.sha)
+        except Exception as file_err:
+            # If file doesn't exist, create it
+            repo.create_file(file_path, "Initial log", f"# MS Mobility Progress Log\n| Date | Fatigue | Trips | Plan |\n|---|---|---|---|\n{content}")
+            
+    except Exception as e:
+        print(f"❌ GitHub Sync Failed: {e}")
+# <--- THE FUNCTION MUST END HERE BEFORE THE NEXT ONE STARTS
+
+def sentry_node(state: AgentState):
+    fatigue = state.get("fatigue_level", 5)
+    return {"safety_alert": fatigue > 7}
 
 # --- 3. LANGGRAPH NODES ---
 def sentry_node(state: AgentState):
@@ -69,25 +79,25 @@ def physio_node(state: AgentState):
     fatigue = state.get("fatigue_level", 5)
     trips = state.get("carpet_trips", 0)
     
+    # Logic: If trips are 0 and fatigue is low (<4), trigger Level 2
+    intensity = "Level 2" if (trips == 0 and fatigue < 4) else "Level 1"
+    
     plan = []
 
-    # CASE 1: High Fatigue (Safety First)
     if state["safety_alert"]:
         plan = MS_EXERCISE_DB["fatigue_recovery"]
-    
-    # CASE 2: Moderate/Low Fatigue - Target the "Trips"
     else:
-        # If trips > 2, prioritize Foot Drop (Ankle)
         if trips >= 2:
-            plan.extend(MS_EXERCISE_DB["foot_drop"][:2])
-            plan.append(MS_EXERCISE_DB["sit_to_stand"][0])
-        # If trips are low but fatigue is moderate, do Marches
+            # Focus on Level 1 Foot Drop to reset the neuro-connection
+            plan.extend(MS_EXERCISE_DB["foot_drop"]["Level 1"])
         else:
-            plan.extend(MS_EXERCISE_DB["marching"][:2])
-            plan.append(MS_EXERCISE_DB["sit_to_stand"][1])
+            # Mix in the calculated Intensity
+            plan.append(MS_EXERCISE_DB["foot_drop"][intensity][0])
+            plan.append(MS_EXERCISE_DB["marching"][intensity][0])
+            plan.append(MS_EXERCISE_DB["sit_to_stand"][intensity][0])
 
-    # Log to GitHub (as we did before)
-    log_entry = f"| {datetime.now().strftime('%Y-%m-%d %H:%M')} | {fatigue} | {trips} | {', '.join(plan)} |"
+    # Log to GitHub including the Intensity level
+    log_entry = f"| {datetime.now().strftime('%Y-%m-%d %H:%M')} | {fatigue} | {trips} | ({intensity}) {', '.join(plan)} |"
     log_to_github(log_entry)
     
     return {"workout_plan": plan}
