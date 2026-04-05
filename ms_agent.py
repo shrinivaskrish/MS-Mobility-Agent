@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 # API & Framework Imports
 from github import Github
+from github import Auth  # Add this line
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from langgraph.graph import StateGraph, END
@@ -48,19 +49,16 @@ class AgentState(TypedDict):
 # --- 2. GITHUB LOGGING LOGIC ---
 def log_to_github(content: str):
     try:
-        g = Github(os.getenv("GITHUB_TOKEN"))
+        # Create an Auth object first
+        auth = Auth.Token(os.getenv("GITHUB_TOKEN"))
+        
+        # Pass the auth object to the Github class
+        g = Github(auth=auth)
+        
         repo = g.get_repo(os.getenv("GITHUB_REPO"))
         file_path = "progress_log.md"
         
-        try:
-            file_exists = repo.get_contents(file_path)
-            new_content = file_exists.decoded_content.decode() + f"\n{content}"
-            repo.update_file(file_path, f"Update log: {datetime.now().date()}", new_content, file_exists.sha)
-        except:
-            repo.create_file(file_path, "Initial log", f"# MS Mobility Progress Log\n| Date | Fatigue | Trips | Plan |\n|---|---|---|---|\n{content}")
-        print("🚀 Sync: GitHub Log Updated.")
-    except Exception as e:
-        print(f"❌ GitHub Sync Failed: {e}")
+        # ... (rest of your existing logic)
 
 # --- 3. LANGGRAPH NODES ---
 def sentry_node(state: AgentState):
