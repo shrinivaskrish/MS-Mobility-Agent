@@ -5,3 +5,4 @@
 | 2026-04-05 08:20 | 3 | 6 | Standing Toe Raises, Sit-to-Stands, Tandem Stance Balance |
 | 2026-04-05 08:33 | 4 | 2 | Seated Ankle Pumps (Neuro-rehab style), Standing Wall-Supported Dorsiflexion, Powered-Up Sit-to-Stands (Focus on Glute Drive) |
 | 2026-04-05 08:34 | 9 | 9 | Diaphragmatic Breathing, Supine Nerve Glides, Gentle Trunk Rotations |
+| 2026-04-05 08:41 | 4 | 2 | Seated Ankle Pumps (Neuro-rehab style), Standing Wall-Supported Dorsiflexion, Powered-Up Sit-to-Stands (Focus on Glute Drive) |
