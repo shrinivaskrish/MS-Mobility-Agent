@@ -20,3 +20,4 @@
 | 2026-04-10 06:33 | 6 | 6 | (Level 1) Seated Ankle Pumps, Resistance Band 4-Way Ankle Strengthening |
 | 2026-04-20 13:00 | 4 | 5 | (Level 1) Seated Ankle Pumps, Resistance Band 4-Way Ankle Strengthening |
 | 2026-05-10 07:03 | 4 | 0 | (Level 1) Seated Ankle Pumps, Seated High Marches, Powered-Up Sit-to-Stands |
+| 2026-05-10 08:28 | 2 | 2 | Seated Ankle Pumps, Resistance Band 4-Way Ankle Strengthening |
